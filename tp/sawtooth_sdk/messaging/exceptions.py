@@ -13,31 +13,14 @@
 # limitations under the License.
 # ------------------------------------------------------------------------------
 
-import os
-import sys
-import pkg_resources
 
-from sawtooth_sdk.processor.core import TransactionProcessor
-from handler import SCTransactionHandler
+# ValidatorConnectionError is used internal to the sdk, and
+# any other use can cause undesirable or unexpected behavior.
+class ValidatorConnectionError(Exception):
+    def __init__(self):
+        super().__init__("the connection to the validator was lost")
 
-DEFAULT_VALIDATOR_ENDPOINT = 'tcp://localhost:4004'
 
-def main():
-    if len(sys.argv) < 2:
-        endpoint = DEFAULT_VALIDATOR_ENDPOINT
-        print('no validator endpoint passed as argument, defaulting to: ' + endpoint)
-    else:
-        endpoint = sys.argv[1]
-
-    processor = TransactionProcessor(url=endpoint)
-    handler = SCTransactionHandler()
-    processor.add_handler(handler)
-
-    try:
-        processor.start()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        processor.stop()
-
-main()
+class WorkloadConfigurationError(Exception):
+    def __init__(self):
+        super().__init__("A workload object is not set.")

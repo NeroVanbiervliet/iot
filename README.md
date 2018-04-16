@@ -7,3 +7,9 @@
 ## Proto
 
 met protobuf compiler:`protoc --python_out=. batch.proto`
+
+## Tp (Transaction processor)
+
+dependencies
+
+* google.protobuf NEED testen

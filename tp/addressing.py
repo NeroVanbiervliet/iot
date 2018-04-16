@@ -25,7 +25,7 @@ def _hash(string):
 # characters depend on the type of object being stored. There is no
 # formula for deriving these infixes.
 
-FAMILY_NAME = 'supply_chain'
+FAMILY_NAME = 'fish'
 
 NAMESPACE = _hash(FAMILY_NAME)[:6]
 

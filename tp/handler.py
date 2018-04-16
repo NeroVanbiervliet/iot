@@ -13,40 +13,34 @@
 # limitations under the License.
 # -----------------------------------------------------------------------------
 
-import logging
 import time
 
 from sawtooth_sdk.processor.exceptions import InvalidTransaction
 from sawtooth_sdk.processor.exceptions import InternalError
 from sawtooth_sdk.protobuf.transaction_pb2 import TransactionHeader
 
-from supply_chain_processor.protobuf.agent_pb2 import Agent
-from supply_chain_processor.protobuf.agent_pb2 import AgentContainer
+from sawtooth_sdk.protobuf.agent_pb2 import Agent
+from sawtooth_sdk.protobuf.agent_pb2 import AgentContainer
 
-from supply_chain_processor.protobuf.property_pb2 import Property
-from supply_chain_processor.protobuf.property_pb2 import PropertyContainer
-from supply_chain_processor.protobuf.property_pb2 import PropertySchema
-from supply_chain_processor.protobuf.property_pb2 import PropertyPage
-from supply_chain_processor.protobuf.property_pb2 import \
+from sawtooth_sdk.protobuf.property_pb2 import Property
+from sawtooth_sdk.protobuf.property_pb2 import PropertyContainer
+from sawtooth_sdk.protobuf.property_pb2 import PropertySchema
+from sawtooth_sdk.protobuf.property_pb2 import PropertyPage
+from sawtooth_sdk.protobuf.property_pb2 import \
     PropertyPageContainer
 
-from supply_chain_processor.protobuf.proposal_pb2 import Proposal
-from supply_chain_processor.protobuf.proposal_pb2 import ProposalContainer
+from sawtooth_sdk.protobuf.proposal_pb2 import Proposal
+from sawtooth_sdk.protobuf.proposal_pb2 import ProposalContainer
 
-from supply_chain_processor.protobuf.record_pb2 import Record
-from supply_chain_processor.protobuf.record_pb2 import RecordContainer
-from supply_chain_processor.protobuf.record_pb2 import RecordType
-from supply_chain_processor.protobuf.record_pb2 import RecordTypeContainer
+from sawtooth_sdk.protobuf.record_pb2 import Record
+from sawtooth_sdk.protobuf.record_pb2 import RecordContainer
+from sawtooth_sdk.protobuf.record_pb2 import RecordType
+from sawtooth_sdk.protobuf.record_pb2 import RecordTypeContainer
 
-from supply_chain_processor.protobuf.payload_pb2 import SCPayload
-from supply_chain_processor.protobuf.payload_pb2 import AnswerProposalAction
+from sawtooth_sdk.protobuf.payload_pb2 import SCPayload
+from sawtooth_sdk.protobuf.payload_pb2 import AnswerProposalAction
 
-import supply_chain_processor.addressing as addressing
-
-
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.DEBUG)
-
+import addressing as addressing
 
 PROPERTY_PAGE_MAX_LENGTH = 256
 TOTAL_PROPERTY_PAGE_MAX = 16 ** 4 - 1
@@ -528,7 +522,6 @@ def _accept_proposal(state, signer, proposal, timestamp):
 
     if role == Proposal.OWNER:
         if not _is_owner(record, issuing_agent):
-            LOGGER.info('Issuing agent is not owner')
             return Proposal.CANCELED
 
         record.owners.extend([
@@ -584,7 +577,6 @@ def _accept_proposal(state, signer, proposal, timestamp):
 
     elif role == Proposal.CUSTODIAN:
         if not _is_custodian(record, issuing_agent):
-            LOGGER.info('Issuing agent is not custodian')
             return Proposal.CANCELED
 
         record.custodians.extend([
@@ -601,7 +593,6 @@ def _accept_proposal(state, signer, proposal, timestamp):
 
     elif role == Proposal.REPORTER:
         if not _is_owner(record, issuing_agent):
-            LOGGER.info('Issuing agent is not owner')
             return Proposal.CANCELED
 
         for prop_name in properties:
