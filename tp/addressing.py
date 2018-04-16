@@ -31,9 +31,7 @@ NAMESPACE = _hash(FAMILY_NAME)[:6]
 
 AGENT = 'ae'
 PROPERTY = 'ea'
-PROPOSAL = 'aa'
 RECORD = 'ec'
-RECORD_TYPE = 'ee'
 
 
 def make_agent_address(identifier):
@@ -50,18 +48,6 @@ def make_record_address(record_id):
         + RECORD
         + _hash(record_id)[:62]
     )
-
-
-def make_record_type_address(type_name):
-    return (
-        NAMESPACE
-        + RECORD_TYPE
-        + _hash(type_name)[:62]
-    )
-
-
-RECORD_TYPE_ADDRESS_RANGE = NAMESPACE + RECORD_TYPE
-
 
 def make_property_address(record_id, property_name, page=0):
     return (

@@ -34,8 +34,6 @@ from sawtooth_sdk.protobuf.proposal_pb2 import ProposalContainer
 
 from sawtooth_sdk.protobuf.record_pb2 import Record
 from sawtooth_sdk.protobuf.record_pb2 import RecordContainer
-from sawtooth_sdk.protobuf.record_pb2 import RecordType
-from sawtooth_sdk.protobuf.record_pb2 import RecordTypeContainer
 
 from sawtooth_sdk.protobuf.payload_pb2 import SCPayload
 from sawtooth_sdk.protobuf.payload_pb2 import AnswerProposalAction
@@ -44,7 +42,6 @@ import addressing as addressing
 
 PROPERTY_PAGE_MAX_LENGTH = 256
 TOTAL_PROPERTY_PAGE_MAX = 16 ** 4 - 1
-
 
 class SCTransactionHandler:
     @property
@@ -139,15 +136,7 @@ def _create_record(payload, signer, timestamp, state):
         raise InvalidTransaction(
             'Record {} already exists'.format(record_id))
 
-    # Check that the record type exists.
-    type_name = payload.record_type
-    record_type, _, _ = _get_record_type(state, type_name)
-
-    type_schemata = {
-        prop.name: prop
-        for prop in record_type.properties
-    }
-
+    # NEED hardcode required properties
     required_properties = {
         name: prop
         for name, prop in type_schemata.items()
@@ -166,7 +155,7 @@ def _create_record(payload, signer, timestamp, state):
                 'Required property {} not provided'.format(
                     name))
 
-    # Make sure the provided properties have the right type
+    # Make sure the provided properties have the right type NEED hardcode types
     for provided_name in provided_properties:
         required_type = type_schemata[provided_name].data_type
         provided_type = provided_properties[provided_name].data_type
@@ -404,257 +393,6 @@ def _update_properties(payload, signer, timestamp, state):
             _set_container(state, property_address, property_container)
 
 
-def _create_proposal(payload, signer, timestamp, state):
-    record_id, receiving_agent, role, properties = \
-        payload.record_id, payload.receiving_agent, \
-        payload.role, payload.properties
-
-    # Verify both agents
-    _verify_agent(state, signer)
-    _verify_agent(state, receiving_agent)
-
-    proposal_address = addressing.make_proposal_address(
-        record_id, receiving_agent)
-    proposal_container = _get_container(state, proposal_address)
-
-    open_proposals = [
-        proposal
-        for proposal in proposal_container.entries
-        if proposal.status == Proposal.OPEN
-    ]
-
-    for proposal in open_proposals:
-        if (proposal.receiving_agent == receiving_agent
-                and proposal.role == role
-                and proposal.record_id == record_id):
-            raise InvalidTransaction(
-                'Proposal already exists')
-
-    record, _, _ = _get_record(state, record_id)
-
-    if record.final:
-        raise InvalidTransaction(
-            'Record is final')
-
-    if role == Proposal.OWNER or role == Proposal.REPORTER:
-        if not _is_owner(record, signer):
-            raise InvalidTransaction(
-                'Must be owner')
-
-    if role == Proposal.CUSTODIAN:
-        if not _is_custodian(record, signer):
-            raise InvalidTransaction(
-                'Must be custodian')
-
-    proposal = Proposal(
-        record_id=record_id,
-        timestamp=timestamp,
-        issuing_agent=signer,
-        receiving_agent=receiving_agent,
-        role=role,
-        properties=properties,
-        status=Proposal.OPEN,
-    )
-
-    proposal_container.entries.extend([proposal])
-    proposal_container.entries.sort(
-        key=lambda prop: (
-            prop.record_id,
-            prop.receiving_agent,
-            prop.timestamp,
-        )
-    )
-
-    _set_container(state, proposal_address, proposal_container)
-
-
-def _answer_proposal(payload, signer, timestamp, state):
-    record_id, receiving_agent, role, response = \
-        payload.record_id, payload.receiving_agent, \
-        payload.role, payload.response
-
-    proposal_address = addressing.make_proposal_address(
-        record_id, receiving_agent)
-    proposal_container = _get_container(state, proposal_address)
-
-    try:
-        proposal = next(
-            proposal
-            for proposal in proposal_container.entries
-            if (proposal.status == Proposal.OPEN
-                and proposal.receiving_agent == receiving_agent
-                and proposal.role == role)
-        )
-    except StopIteration:
-        raise InvalidTransaction(
-            'No such open proposal')
-
-    if response == AnswerProposalAction.CANCEL:
-        if proposal.issuing_agent != signer:
-            raise InvalidTransaction(
-                'Only the issuing agent can cancel')
-
-        proposal.status = Proposal.CANCELED
-
-    elif response == AnswerProposalAction.REJECT:
-        if proposal.receiving_agent != signer:
-            raise InvalidTransaction(
-                'Only the receiving agent can reject')
-
-        proposal.status = Proposal.REJECTED
-
-    elif response == AnswerProposalAction.ACCEPT:
-        if proposal.receiving_agent != signer:
-            raise InvalidTransaction(
-                'Only the receiving agent can accept')
-
-        proposal.status = _accept_proposal(state, signer, proposal, timestamp)
-
-    _set_container(state, proposal_address, proposal_container)
-
-
-def _accept_proposal(state, signer, proposal, timestamp):
-    record_id, issuing_agent, receiving_agent, role, properties = \
-        proposal.record_id, proposal.issuing_agent, \
-        proposal.receiving_agent, proposal.role, proposal.properties
-
-    record, record_container, record_address = _get_record(state, record_id)
-
-    if role == Proposal.OWNER:
-        if not _is_owner(record, issuing_agent):
-            return Proposal.CANCELED
-
-        record.owners.extend([
-            Record.AssociatedAgent(
-                agent_id=receiving_agent,
-                timestamp=timestamp)
-        ])
-
-        record.owners.sort(key=lambda agent: agent.timestamp)
-
-        _set_container(state, record_address, record_container)
-
-        # Authorize the new owner as a reporter on all of the record's
-        # properties and deauthorize the old owner, leaving everything
-        # else as-is
-        record_type, _, _ = _get_record_type(state, record.record_type)
-
-        for prop_name in (prop.name for prop in record_type.properties):
-            prop, prop_container, prop_address = _get_property(
-                state, record_id, prop_name)
-
-            old_owner = next(
-                reporter
-                for reporter in prop.reporters
-                if reporter.public_key == issuing_agent
-            )
-
-            old_owner.authorized = False
-
-            try:
-                new_owner = next(
-                    reporter
-                    for reporter in prop.reporters
-                    if reporter.public_key == receiving_agent
-                )
-
-                if not new_owner.authorized:
-                    new_owner.authorized = True
-                    _set_container(state, prop_address, prop_container)
-
-            except StopIteration:
-                new_owner = Property.Reporter(
-                    public_key=receiving_agent,
-                    authorized=True,
-                    index=len(prop.reporters),
-                )
-
-                prop.reporters.extend([new_owner])
-
-                _set_container(state, prop_address, prop_container)
-
-        return Proposal.ACCEPTED
-
-    elif role == Proposal.CUSTODIAN:
-        if not _is_custodian(record, issuing_agent):
-            return Proposal.CANCELED
-
-        record.custodians.extend([
-            Record.AssociatedAgent(
-                agent_id=receiving_agent,
-                timestamp=timestamp)
-        ])
-
-        record.custodians.sort(key=lambda agent: agent.timestamp)
-
-        _set_container(state, record_address, record_container)
-
-        return Proposal.ACCEPTED
-
-    elif role == Proposal.REPORTER:
-        if not _is_owner(record, issuing_agent):
-            return Proposal.CANCELED
-
-        for prop_name in properties:
-            prop, container, address = _get_property(
-                state, record_id, prop_name)
-
-            prop.reporters.extend([
-                Property.Reporter(
-                    public_key=signer,
-                    authorized=True,
-                    index=len(prop.reporters),
-                )
-            ])
-
-            _set_container(state, address, container)
-
-        return Proposal.ACCEPTED
-
-
-def _revoke_reporter(payload, signer, timestamp, state):
-    '''
-    * Check that the signer is the owner
-    * Check that the reporter is actually a reporter
-    * Does it matter if the record is finalized?
-    '''
-    record_id, reporter_id, properties = \
-        payload.record_id, payload.reporter_id, payload.properties
-
-    record, _, _ = _get_record(state, record_id)
-
-    if not _is_owner(record, signer):
-        raise InvalidTransaction(
-            'Must be owner to revoke reporters')
-
-    if record.final:
-        raise InvalidTransaction(
-            'Record is final')
-
-    for property_name in properties:
-        prop, property_container, property_address = \
-            _get_property(state, record_id, property_name)
-
-        try:
-            reporter = next(
-                reporter
-                for reporter in prop.reporters
-                if reporter.public_key == reporter_id
-            )
-
-            if not reporter.authorized:
-                raise InvalidTransaction(
-                    'Reporter has already been revoked')
-
-        except StopIteration:
-            raise InvalidTransaction(
-                'Reporter cannot be revoked')
-
-        reporter.authorized = False
-
-        _set_container(state, property_address, property_container)
-
-
 # helpers
 
 def _get_container(state, address):
@@ -866,7 +604,7 @@ def _unpack_transaction(transaction):
     try:
         attribute, handler = TYPE_TO_ACTION_HANDLER[action]
     except KeyError:
-        raise Exception('Specified action is invalid')
+        raise Exception('No handler defined for action ' + action)
 
     payload = getattr(payload, attribute)
 
@@ -877,10 +615,5 @@ TYPE_TO_ACTION_HANDLER = {
     SCPayload.CREATE_AGENT: ('create_agent', _create_agent),
     SCPayload.CREATE_RECORD: ('create_record', _create_record),
     SCPayload.FINALIZE_RECORD: ('finalize_record', _finalize_record),
-    SCPayload.CREATE_RECORD_TYPE: ('create_record_type',
-                                   _create_record_type),
-    SCPayload.UPDATE_PROPERTIES: ('update_properties', _update_properties),
-    SCPayload.CREATE_PROPOSAL: ('create_proposal', _create_proposal),
-    SCPayload.ANSWER_PROPOSAL: ('answer_proposal', _answer_proposal),
-    SCPayload.REVOKE_REPORTER: ('revoke_reporter', _revoke_reporter),
+    SCPayload.UPDATE_PROPERTIES: ('update_properties', _update_properties)
 }
