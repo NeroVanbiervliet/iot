@@ -22,15 +22,12 @@ const {
 const app = { user: null, keys: [], assets: [], transfers: [] }
 
 app.refresh = function () {
-  getState(({ assets, transfers }) => {
+  getState((assets) => {
     this.assets = assets
-    this.transfers = transfers
 
     // Clear existing data views
     $('#assetList').empty()
-    $('#transferList').empty()
     $('[name="assetSelect"]').children().slice(1).remove()
-    $('[name="transferSelect"]').children().slice(1).remove()
 
     // Populate asset views
     assets.forEach(asset => {

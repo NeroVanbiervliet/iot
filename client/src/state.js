@@ -8,19 +8,25 @@ Original source code can be found here: https://github.com/delventhalz/transfer-
 'use strict'
 
 const $ = require('jquery')
+const { createHash } = require('crypto')
 const {
   signer,
   BatchEncoder,
   TransactionEncoder
 } = require('sawtooth-sdk/client')
 
+// Encoding helpers and constants
+const getAddress = (key, length = 64) => {
+  return createHash('sha512').update(key).digest('hex').slice(0, length)
+}
+
 // Config variables
 const KEY_NAME = 'transfer-chain.keys'
 const API_URL = 'http://localhost:8080'
 
-const FAMILY = 'transfer-chain'
+const FAMILY = 'fish'
 const VERSION = '0.0'
-const PREFIX = '19d832'
+const PREFIX = getAddress(FAMILY, 6)
 
 // Create new key-pair
 const makeKeyPair = () => {
@@ -34,14 +40,9 @@ const makeKeyPair = () => {
 // Fetch current Sawtooth Tuna Chain state from validator
 const getState = cb => {
   $.get(`${API_URL}/state?address=${PREFIX}`, ({ data }) => {
-    cb(data.reduce((processed, datum) => {
-      if (datum.data !== '') {
-        const parsed = JSON.parse(atob(datum.data))
-        if (datum.address[7] === '0') processed.assets.push(parsed)
-        if (datum.address[7] === '1') processed.transfers.push(parsed)
-      }
-      return processed
-    }, {assets: [], transfers: []}))
+    let processed = data.map(d => Buffer.from(d.data, 'base64'))
+    processed = processed.map(d => JSON.parse(d))
+    cb(processed, [])
   })
 }
 
