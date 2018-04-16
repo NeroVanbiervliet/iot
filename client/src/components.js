@@ -21,17 +21,7 @@ const addRow = (parent, ...cells) => {
   $(parent).append(`<tr>${tds}</tr>`)
 }
 
-// Add div with accept/reject buttons
-const addAction = (parent, label, action) => {
-  $(parent).append(`<div>
-  <span>${label}</span>
-  <input class="accept btn btn-primary" type="button" value="Accept">
-  <input class="reject btn btn-caution" type="button" value="Reject">
-</div>`)
-}
-
 module.exports = {
   addOption,
-  addRow,
-  addAction
+  addRow
 }

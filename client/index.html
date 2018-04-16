@@ -40,14 +40,20 @@ Original source code can be found here: https://github.com/delventhalz/transfer-
       width:45%;
       display:inline-block;
     }
-    #left-column{
+    
+    #data{
       display:inline-block;
     }
-    #data{
+    
+    #right-column{
       display: inline-block;
       width: 45%;
       vertical-align: top;
       margin-left: 2%;
+    }
+    
+    .fish-prop label {
+      margin-right: 5px;
     }
   </style>
 </head>
@@ -59,40 +65,8 @@ Original source code can be found here: https://github.com/delventhalz/transfer-
   </header>
 
   <div id="body">
-    <div id="left-column">
-      <div class="form-group">
-        <label>Select Holder</label>
-        <select class="form-control" name="keySelect">
-          <option value="none" selected>Select public key...</option>
-          <option value="new">Create new key pair</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Create Tuna Record</label>
-        <input id="createName" class="form-control" type="text" placeholder="Enter asset name...">
-        <input id="createSubmit" type="button" value="Create" class="btn btn-primary">
-      </div>
-
-      <div class="form-group">
-        <label>Transfer Tuna</label>
-        <select class="form-control" name="assetSelect">
-          <option value="none" selected>Select Tuna...</option>
-        </select>
-        <select class="form-control" name="transferSelect">
-          <option value="none" selected>Select recipient...</option>
-        </select>
-        <input id="transferSubmit" type="button" value="Transfer" class="btn btn-primary">
-      </div>
-
-      <div class="form-group">
-        <label>Accept Tuna</label>
-        <div id="transferList"></div>
-      </div>
-    </div>
-
     <div id="data">
-      <label>Tuna List</label>
+      <label>Fish List</label>
       <table class="table table-hover">
         <tr>
           <th>Tuna</th>
@@ -100,6 +74,31 @@ Original source code can be found here: https://github.com/delventhalz/transfer-
         </tr>
         <tbody id="assetList"></tbody>
       </table>
+    </div>
+    
+    <div id="right-column">
+      <div class="form-group">
+        <label>Select Fish</label>
+        <select class="form-control" name="assetSelect">
+          <option value="none" selected>Select fish...</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <div class="fish-prop" id="prop-name"><label>Name: </label><span class="value"></span></div>
+        <div class="fish-prop" id="prop-location"><label>Catch Location: </label></div>
+        <div class="fish-prop" id="prop-sold"><label>Sold: </label></div>
+        <div class="fish-prop" id="prop-spoiled"><label>Spoiled: </label></div>
+      </div>
+
+      <div class="form-group">
+        <label>Temperature list</label>
+        <div id="temperatureList"></div>
+      </div>
+
+      <div class="form-group">
+        <input id="transferSubmit" type="button" value="Buy fish" class="btn btn-primary">
+      </div>      
     </div>
   </div>
 

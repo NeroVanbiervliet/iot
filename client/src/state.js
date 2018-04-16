@@ -22,20 +22,6 @@ const FAMILY = 'transfer-chain'
 const VERSION = '0.0'
 const PREFIX = '19d832'
 
-// Fetch key-pairs from localStorage
-const getKeys = () => {
-  const storedKeys = localStorage.getItem(KEY_NAME)
-  if (!storedKeys) return []
-
-  return storedKeys.split(';').map((pair) => {
-    const separated = pair.split(',')
-    return {
-      public: separated[0],
-      private: separated[1]
-    }
-  })
-}
-
 // Create new key-pair
 const makeKeyPair = () => {
   const privateKey = signer.makePrivateKey()
@@ -43,12 +29,6 @@ const makeKeyPair = () => {
     public: signer.getPublicKey(privateKey),
     private: privateKey
   }
-}
-
-// Save key-pairs to localStorage
-const saveKeys = keys => {
-  const paired = keys.map(pair => [pair.public, pair.private].join(','))
-  localStorage.setItem(KEY_NAME, paired.join(';'))
 }
 
 // Fetch current Sawtooth Tuna Chain state from validator
@@ -91,9 +71,7 @@ const submitUpdate = (payload, privateKey, cb) => {
 }
 
 module.exports = {
-  getKeys,
   makeKeyPair,
-  saveKeys,
   getState,
   submitUpdate
 }
