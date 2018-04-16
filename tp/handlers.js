@@ -20,7 +20,7 @@ const getAddress = (key, length = 64) => {
 const FAMILY = 'fish'
 const PREFIX = getAddress(FAMILY, 6)
 
-const getAssetAddress = name => PREFIX + getAddress(name, 66)
+const getAssetAddress = name => PREFIX + getAddress(name, 64)
 
 // NERO: buffers worden gebruikt om streams van binaire data te handlen
 const encode = obj => Buffer.from(JSON.stringify(obj, Object.keys(obj).sort()))

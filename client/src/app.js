@@ -32,9 +32,6 @@ app.refresh = function () {
     $('[name="assetSelect"]').children().slice(1).remove()
     $('[name="transferSelect"]').children().slice(1).remove()
 
-    // store assets for later
-    app.assets = assets
-
     // Populate asset views
     assets.forEach(asset => {
       addRow('#assetList', asset.name, asset.owner)

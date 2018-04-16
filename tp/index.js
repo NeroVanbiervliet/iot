@@ -23,6 +23,6 @@ else {
 }
 
 // Initialize Transaction Processor
-const tp = new TransactionProcessor(VALIDATOR_URL)
+const tp = new TransactionProcessor(validatorUrl)
 tp.addHandler(new JSONHandler())
 tp.start()
