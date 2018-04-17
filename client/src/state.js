@@ -22,7 +22,7 @@ const getAddress = (key, length = 64) => {
 
 // Config variables
 const KEY_NAME = 'transfer-chain.keys'
-const API_URL = 'http://localhost:8080'
+const API_URL = 'http://localhost:8081' // api of the second node
 
 const FAMILY = 'fish'
 const VERSION = '0.0'

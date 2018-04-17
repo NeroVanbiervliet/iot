@@ -12,7 +12,7 @@ const {
   makeKeyPair,
   getState,
   submitUpdate
-} = require('./interface')
+} = require('./api_interaction')
 
 // Application Object
 const app = { user: null, currentAsset: null, assets: null}
