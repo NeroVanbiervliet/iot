@@ -1,8 +1,6 @@
-// SPDX-License-Identifier: Apache-2.0
-
 /* 
-This code was written by Zac Delventhal @delventhalz.
-Original source code can be found here: https://github.com/delventhalz/transfer-chain-js/blob/master/client/src/state.js
+Original code was written by Zac Delventhal @delventhalz.
+Adapted by Nero Vanbiervliet
  */
  
 'use strict'
@@ -16,11 +14,11 @@ const {
   TransactionEncoder
 } = require('sawtooth-sdk/client')
 
-// Config variables
+// arduino will connect to api of the first node
 const API_URL = 'localhost'
 const API_PORT = 8080
 
-// Encoding helpers and constants
+// helper function to generate addresses based on sha512 hash function 
 const getAddress = (key, length = 64) => {
   return createHash('sha512').update(key).digest('hex').slice(0, length)
 }
@@ -28,7 +26,7 @@ const getAddress = (key, length = 64) => {
 const FAMILY = 'fish'
 const PREFIX = getAddress(FAMILY, 6)
 
-// Create new key-pair
+// create new key-pair
 const makeKeyPair = () => {
   const privateKey = signer.makePrivateKey()
   return {
@@ -37,7 +35,7 @@ const makeKeyPair = () => {
   }
 }
 
-// Fetch current Sawtooth Tuna Chain state from validator
+// fetch curren state
 // NEED omzetten naar request
 const getState = function() {
   return new Promise(function(resolve, reject) {
@@ -52,9 +50,8 @@ const getState = function() {
   })
 }
 
-// Submit signed Transaction to validator
-// NERO: wordt enkel 1x aangeroepen in app.js
-const submitUpdate = function (payload, privateKey) {
+// submit signed transaction to validator
+const submitUpdate = (payload, privateKey) => {
   // create data
   const transaction = new TransactionEncoder(privateKey, {
     inputs: [PREFIX],

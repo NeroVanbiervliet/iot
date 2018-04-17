@@ -1,8 +1,6 @@
-// SPDX-License-Identifier: Apache-2.0
-
 /* 
-This code was written by Zac Delventhal @delventhalz.
-Original source code can be found here: https://github.com/delventhalz/transfer-chain-js/blob/master/client/src/state.js
+Original code was written by Zac Delventhal @delventhalz.
+Adapted by Nero Vanbiervliet
  */
  
 'use strict'
@@ -15,12 +13,12 @@ const {
   TransactionEncoder
 } = require('sawtooth-sdk/client')
 
-// Encoding helpers and constants
+// helper function to generate addresses based on sha512 hash function 
 const getAddress = (key, length = 64) => {
   return createHash('sha512').update(key).digest('hex').slice(0, length)
 }
 
-// Config variables
+// config variables
 const KEY_NAME = 'transfer-chain.keys'
 const API_URL = 'http://localhost:8081' // api of the second node
 
@@ -28,7 +26,7 @@ const FAMILY = 'fish'
 const VERSION = '0.0'
 const PREFIX = getAddress(FAMILY, 6)
 
-// Create new key-pair
+// create new key-pair
 const makeKeyPair = () => {
   const privateKey = signer.makePrivateKey()
   return {
@@ -37,7 +35,7 @@ const makeKeyPair = () => {
   }
 }
 
-// Fetch current Sawtooth Tuna Chain state from validator
+// fetch current state
 const getState = cb => {
   $.get(`${API_URL}/state?address=${PREFIX}`, ({ data }) => {
     let processed = data.map(d => Buffer.from(d.data, 'base64'))
@@ -46,8 +44,7 @@ const getState = cb => {
   })
 }
 
-// Submit signed Transaction to validator
-// NERO: wordt enkel 1x aangeroepen in app.js
+// submit signed transaction to validator
 const submitUpdate = (payload, privateKey, cb) => {
   const transaction = new TransactionEncoder(privateKey, {
     inputs: [PREFIX],
@@ -65,7 +62,7 @@ const submitUpdate = (payload, privateKey, cb) => {
     data: batchBytes,
     headers: {'Content-Type': 'application/octet-stream'},
     processData: false,
-    // Any data object indicates the Batch was not committed
+    // any data object indicates the batch was not committed
     success: ({ data }) => cb(!data),
     error: () => cb(false)
   })

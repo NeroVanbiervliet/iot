@@ -1,8 +1,6 @@
-// SPDX-License-Identifier: Apache-2.0
-
 /* 
-This code was written by Zac Delventhal @delventhalz. 
-Original source code can be found here: https://github.com/delventhalz/transfer-chain-js/blob/master/client/src/app.js
+Original code was written by Zac Delventhal @delventhalz.
+Adapted by Nero Vanbiervliet
  */
  
 'use strict'
@@ -18,18 +16,18 @@ const {
   addRow
 } = require('./components')
 
-// Application Object
+// application object
 const app = { user: null, keys: [], assets: [], transfers: [] }
 
 app.refresh = function () {
   getState((assets) => {
     this.assets = assets
 
-    // Clear existing data views
+    // clear existing data views
     $('#assetList').empty()
     $('[name="assetSelect"]').children().slice(1).remove()
 
-    // Populate asset views
+    // populate asset view
     assets.forEach(asset => {
       addRow('#assetList', asset.name, asset.owner)
       addOption('[name="assetSelect"]', asset.name)
@@ -55,14 +53,14 @@ app.update = function (action, asset, owner) {
   }
 }
 
-// Transfer Asset
+// transfer asset
 $('#transferSubmit').on('click', function () {
   const asset = $('[name="assetSelect"]').val()
   const owner = $('[name="transferSelect"]').val()
   if (asset && owner) app.update('transfer', asset, owner)
 })
 
-// Initialize
+// initialise
 app.user = makeKeyPair()
 app.keys.push(app.user)
 console.log('keys: ' + JSON.stringify(app.user))
