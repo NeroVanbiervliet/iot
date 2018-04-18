@@ -35,13 +35,12 @@ const makeKeyPair = () => {
   }
 }
 
-// fetch curren state
-// NEED omzetten naar request
+// fetch current state
 const getState = function() {
   return new Promise(function(resolve, reject) {
     http.get(`http://${API_URL}:${API_PORT}/state?address=${PREFIX}`, (res) => {
-      res.on("data", function(chunk) {
-        let data = JSON.parse(chunk).data
+      res.on('data', function (body) {
+        let data = JSON.parse(body).data
         data = data.map(d => Buffer.from(d.data, 'base64'))
         data = data.map(d => JSON.parse(d))
         resolve(data)
