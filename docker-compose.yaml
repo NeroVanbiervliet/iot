@@ -30,7 +30,7 @@ services:
     image: hyperledger/sawtooth-tp_settings:0.8
     container_name: sawtooth-settings-tp-default-2
     expose:
-      - 4004
+      - 4005
     depends_on:
       - validator-2
     entrypoint: settings-tp -vv tcp://validator-2:4005

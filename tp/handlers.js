@@ -57,7 +57,7 @@ class JSONHandler extends TransactionHandler {
     // parse the transaction header and payload
     const header = TransactionHeader.decode(txn.header)
     const signer = header.signerPubkey
-    const { action, asset, owner } = JSON.parse(txn.payload) // NERO zie app.js wat payload is
+    const { action, asset, owner } = JSON.parse(txn.payload)
 
     // call the appropriate function based on the payload's action
     console.log(`Handling transaction:  ${action} > ${asset}`,
