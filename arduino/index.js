@@ -27,8 +27,14 @@ app.createAsset = function () {
     if (!existingNames.includes(newName)) break;
   }
   console.log(newName + ' submitted to validator')
+  this.currentAsset = newName
   // submit new asset to api
   submitUpdate({action:'create', asset:newName, owner:this.user.public}, this.user.private)
+}
+
+// set the state of the current asset to tilted
+app.setTilted = function () {
+  submitUpdate({action: 'add-tilted', asset:app.currentAsset, owner:app.user.public}, app.user.private)
 }
 
 // initialise
@@ -37,4 +43,5 @@ getState(app.assets).then(function (assets) {
   app.assets = assets
   // new asset is created upon running the script
   app.createAsset()
+  setTimeout(app.setTilted, 5e3); // set tilted after five seconds
 })

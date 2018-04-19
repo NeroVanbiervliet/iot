@@ -26,8 +26,9 @@ const getAssetAddress = name => PREFIX + getAddress(name, 64)
 const encode = obj => Buffer.from(JSON.stringify(obj, Object.keys(obj).sort()))
 const decode = buf => JSON.parse(buf.toString())
 
+// handler for action 'create'
 // add a new asset to the state
-const createAsset = (asset, owner, state) => {
+const createAsset = (asset, owner, state) => { // owner == signer
   const address = getAssetAddress(asset)
 
   return state.get([address])
@@ -40,11 +41,34 @@ const createAsset = (asset, owner, state) => {
 
       // new asset is added to the state
       return state.set({
-        [address]: encode({name: asset, owner})
+        [address]: encode({name: asset, owner, tilted: false}) // == {name: 'value of asset', owner: 'value of owner', tilted: false}
       })
     })
 }
 
+// handler for action 'add-tilted'
+const setTilted = (asset, signer, state) => {
+  // TODO check that signer is owner
+  
+  const address = getAssetAddress(asset)
+  
+  return state.get([address])
+    .then(entries => {
+      // check if an asset exists on the address
+      const entry = entries[address] // there is only one entry because only one address was queried
+      if (!(entry && entry.length > 0)) {
+        throw new InvalidTransaction('Asset not found')
+      }
+
+      let processed = Buffer.from(entry, 'base64')
+      processed = JSON.parse(processed)
+
+      // set tilted to true and return the new state
+      return state.set({
+        [address]: encode({name: processed.name, owner: processed.owner, tilted: true}) 
+      })
+    })
+}
 
 class JSONHandler extends TransactionHandler {
   constructor () {
@@ -66,6 +90,7 @@ class JSONHandler extends TransactionHandler {
 
     // depending on the type, the correct handler is called
     if (action === 'create') return createAsset(asset, signer, state)
+    if (action === 'add-tilted') return setTilted(asset, signer, state)
     // to be added: handlers for e.g. action === 'add-temperature' or action === 'sell'
 
     // no handler function was found for the action

@@ -39,7 +39,8 @@ app.refresh = function () {
 $('[name="assetSelect"]').on('change', function () {
   if (this.value !== 'none') {
     let asset = app.assets.find(key => key.name === this.value)
-    $('#prop-name span').html(asset.name) // jQuery for innerHTML
+    $('#prop-name span').html(asset.name) // .html() is jQuery for innerHTML
+    $('#prop-tilted span').html(asset.tilted.toString())
   }
 })
 
