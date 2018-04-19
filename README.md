@@ -4,11 +4,16 @@
 `npm run build`
 `sudo python -m SimpleHTTPServer 90`
 
-## Proto
+## Checklist versie voor studenten
 
+* tag een assignment versie op git
+* verwijder readme
+* verwijder .git directory
+* verwijder alle `node_modules`
+* houd de `bundle.js` voor de frontend, maar verwijder de `src` en `node_modules`
+
+## Obsolete
+
+Protocol Buffers compileren (niet nodig met nodejs, wel met python)
 met protobuf compiler:`protoc --python_out=. batch.proto`
-
-## Tp (Transaction processor)
-
-`npm install`
 
