@@ -41,7 +41,7 @@ const createAsset = (asset, owner, state) => { // owner == signer
 
       // new asset is added to the state
       return state.set({
-        [address]: encode({name: asset, owner, tilted: false}) // == {name: 'value of asset', owner: 'value of owner', tilted: false}
+        [address]: encode({name: asset, owner, tilted: false, spoiled: false}) // syntax: {name: asset, owner} == {name: 'value of asset', owner: 'value of owner'}
       })
     })
 }
@@ -65,7 +65,7 @@ const setTilted = (asset, signer, state) => {
 
       // set tilted to true and return the new state
       return state.set({
-        [address]: encode({name: processed.name, owner: processed.owner, tilted: true}) 
+        [address]: encode({name: processed.name, owner: processed.owner, tilted: true, spoiled: true}) 
       })
     })
 }

@@ -41,6 +41,7 @@ $('[name="assetSelect"]').on('change', function () {
     let asset = app.assets.find(key => key.name === this.value)
     $('#prop-name span').html(asset.name) // .html() is jQuery for innerHTML
     $('#prop-tilted span').html(asset.tilted.toString())
+    $('#prop-spoiled span').html(asset.spoiled.toString())
   }
 })
 
