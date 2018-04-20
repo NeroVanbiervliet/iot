@@ -15,6 +15,12 @@ const getAddress = (key, length = 64) => {
   return createHash('sha512').update(key).digest('hex').slice(0, length)
 }
 
+// gets the address of an index in the temperature array NEED brakke structuur van adressen
+const getArrayAddress = (assetName, arrayIndex) => {
+  let baseAddr = PREFIX + getAddress(assetName+'array', 60)
+  return baseAddr + ("0000" + arrayIndex.toString(16)).slice(-4);
+}
+
 // transaction family is defined by a name
 const FAMILY = 'fish'
 // address namespace is 3 bytes, created as first 6 hex characters of hash of family name
@@ -39,9 +45,13 @@ const createAsset = (asset, owner, state) => { // owner == signer
         throw new InvalidTransaction('Asset name in use')
       }
 
+      // create address for array 
+      const arrayAddr = getArrayAddress(asset,0) // 0th 'index' is the entry point of the array
+
       // new asset is added to the state
       return state.set({
-        [address]: encode({name: asset, owner, tilted: false, spoiled: false}) // syntax: {name: asset, owner} == {name: 'value of asset', owner: 'value of owner'}
+        [address]: encode({name: asset, owner, tilted: false, spoiled: false}), // syntax: {name: asset, owner} == {name: 'value of asset', owner: 'value of owner'}
+        [arrayAddr]: encode(1) // 1 is the first index to store a data point
       })
     })
 }
@@ -60,6 +70,7 @@ const setTilted = (asset, signer, state) => {
         throw new InvalidTransaction('Asset not found')
       }
 
+      // TODO use decode() ?
       let processed = Buffer.from(entry, 'base64')
       processed = JSON.parse(processed)
 
@@ -97,6 +108,33 @@ const changeOwner = (asset, signer, state) => {
     })
 }
 
+// handler for action 'add-temperature'
+const addTemperature = (asset, signer, state) => {
+  const address = getAssetAddress(asset.name)
+  const arrayAddr = getArrayAddress(asset.name,0)
+  
+  return state.get([address, arrayAddr])
+    .then(entries => {
+      // check if an asset exists on the address
+      const entry = entries[address]
+      if (!(entry && entry.length > 0)) {
+        throw new InvalidTransaction('Asset not found')
+      }
+      
+      // check the next index of the temperature 
+      const nextIndex = decode(entries[arrayAddr])  
+      const nextAddr = getArrayAddress(asset.name,nextIndex)
+      
+      // TODO set spoiled if temperature too high
+
+      // change next array index and set new data point
+      return state.set({
+        [arrayAddr]: encode(nextIndex+1),
+        [nextAddr]: encode({temp: asset.temperature, time: asset.timestamp})        
+      })
+    })
+}
+
 class JSONHandler extends TransactionHandler {
   constructor () {
     console.log('Initializing JSON handler for Sawtooth Tuna Chain')
@@ -119,7 +157,7 @@ class JSONHandler extends TransactionHandler {
     if (action === 'create') return createAsset(asset, signer, state)
     if (action === 'add-tilted') return setTilted(asset, signer, state)
     if (action === 'transfer') return changeOwner(asset, signer, state)
-    // to be added: handlers for e.g. action === 'add-temperature' or action === 'sell'
+    if (action === 'add-temperature') return addTemperature(asset, signer, state)
 
     // no handler function was found for the action
     return Promise.resolve().then(() => {

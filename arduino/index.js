@@ -37,6 +37,11 @@ app.setTilted = function () {
   submitUpdate({action: 'add-tilted', asset:app.currentAsset, owner:app.user.public}, app.user.private)
 }
 
+// submits a temperature 
+app.updateTemperature = function () {
+  submitUpdate({action: 'add-temperature', asset:{name: app.currentAsset, temperature: 11, timestamp: 22}, owner:app.user.public}, app.user.private)
+}
+
 // initialise
 app.user = makeKeyPair()
 getState(app.assets).then(function (assets) {
@@ -44,4 +49,6 @@ getState(app.assets).then(function (assets) {
   // new asset is created upon running the script
   app.createAsset()
   setTimeout(app.setTilted, 10e3); // set tilted after ten seconds
+  setTimeout(app.updateTemperature, 5e3); // update temperature
+  setTimeout(app.updateTemperature, 10e3); // update temperature second time
 })
