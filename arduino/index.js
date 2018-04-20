@@ -43,5 +43,5 @@ getState(app.assets).then(function (assets) {
   app.assets = assets
   // new asset is created upon running the script
   app.createAsset()
-  setTimeout(app.setTilted, 5e3); // set tilted after five seconds
+  setTimeout(app.setTilted, 10e3); // set tilted after ten seconds
 })

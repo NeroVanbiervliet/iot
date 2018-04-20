@@ -70,6 +70,33 @@ const setTilted = (asset, signer, state) => {
     })
 }
 
+// handler for action 'transfer'
+const changeOwner = (asset, signer, state) => {
+  const address = getAssetAddress(asset)
+  
+  return state.get([address])
+    .then(entries => {
+      // check if an asset exists on the address
+      const entry = entries[address]
+      if (!(entry && entry.length > 0)) {
+        throw new InvalidTransaction('Asset not found')
+      }
+
+      let processed = Buffer.from(entry, 'base64')
+      processed = JSON.parse(processed)
+
+      // fish cannot be spoiled
+      if (processed.spoiled) {
+        throw new InvalidTransaction('Fish cannot be transfered because it is spoiled')
+      }
+
+      // set new owner to signer of transaction
+      return state.set({
+        [address]: encode({name: processed.name, owner: signer, tilted: processed.tilted, spoiled: processed.spoiled}) 
+      })
+    })
+}
+
 class JSONHandler extends TransactionHandler {
   constructor () {
     console.log('Initializing JSON handler for Sawtooth Tuna Chain')
@@ -91,6 +118,7 @@ class JSONHandler extends TransactionHandler {
     // depending on the type, the correct handler is called
     if (action === 'create') return createAsset(asset, signer, state)
     if (action === 'add-tilted') return setTilted(asset, signer, state)
+    if (action === 'transfer') return changeOwner(asset, signer, state)
     // to be added: handlers for e.g. action === 'add-temperature' or action === 'sell'
 
     // no handler function was found for the action

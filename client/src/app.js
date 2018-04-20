@@ -17,7 +17,7 @@ const {
 } = require('./components')
 
 // application object
-const app = { user: null, keys: [], assets: [], transfers: [] }
+const app = { user: null, keys: [], assets: [], transfers: [], selectedAsset: null}
 
 app.refresh = function () {
   getState((assets) => {
@@ -39,6 +39,7 @@ app.refresh = function () {
 $('[name="assetSelect"]').on('change', function () {
   if (this.value !== 'none') {
     let asset = app.assets.find(key => key.name === this.value)
+    app.selectedAsset = asset
     $('#prop-name span').html(asset.name) // .html() is jQuery for innerHTML
     $('#prop-tilted span').html(asset.tilted.toString())
     $('#prop-spoiled span').html(asset.spoiled.toString())
@@ -57,8 +58,8 @@ app.update = function (action, asset, owner) {
 
 // transfer asset
 $('#transferSubmit').on('click', function () {
-  const asset = $('[name="assetSelect"]').val()
-  const owner = $('[name="transferSelect"]').val()
+  const asset = app.selectedAsset.name
+  const owner = app.selectedAsset.owner
   if (asset && owner) app.update('transfer', asset, owner)
 })
 
