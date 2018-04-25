@@ -48,7 +48,7 @@ getState(app.assets).then(function (assets) {
   app.assets = assets
   // new asset is created upon running the script
   app.createAsset()
-  setTimeout(app.setTilted, 10e3); // set tilted after ten seconds
+  // setTimeout(app.setTilted, 10e3); // set tilted after ten seconds
   setTimeout(app.updateTemperature, 5e3); // update temperature
   setTimeout(app.updateTemperature, 10e3); // update temperature second time
 })

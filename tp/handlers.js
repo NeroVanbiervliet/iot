@@ -56,7 +56,7 @@ const createAsset = (asset, owner, state) => { // owner == signer
 
       // new asset is added to the state
       return state.set({
-        [mainPropsAddress]: encode({name: asset, owner, tilted: false, spoiled: false}), // syntax: {name: asset, owner} == {name: 'value of asset', owner: 'value of owner'}
+        [mainPropsAddress]: encode({name: asset, owner, tilted: false, spoiled: false, sold: false, catchLat:3.14, catchLon:3.14, catchTime:314}), // syntax: {name: asset, owner} == {name: 'value of asset', owner: 'value of owner'}
         [arrayAddr]: encode(1) // 1 is the first index to store a data point
       })
     })
@@ -82,7 +82,7 @@ const setTilted = (asset, signer, state) => {
 
       // set tilted to true and return the new state
       return state.set({
-        [mainPropsAddress]: encode({name: processed.name, owner: processed.owner, tilted: true, spoiled: true}) 
+        [mainPropsAddress]: encode({name: processed.name, owner: processed.owner, tilted: true, spoiled: true, sold: processed.sold, catchLat: processed.catchLat, catchLon: processed.catchLon, catchTime: processed.catchTime}) 
       })
     })
 }
@@ -109,7 +109,7 @@ const changeOwner = (asset, signer, state) => {
 
       // set new owner to signer of transaction
       return state.set({
-        [mainPropsAddress]: encode({name: processed.name, owner: signer, tilted: processed.tilted, spoiled: processed.spoiled}) 
+        [mainPropsAddress]: encode({name: processed.name, owner: signer, tilted: processed.tilted, spoiled: processed.spoiled, sold:true, catchLat: processed.catchLat, catchLon: processed.catchLon, catchTime: processed.catchTime}) 
       })
     })
 }

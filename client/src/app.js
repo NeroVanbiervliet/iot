@@ -45,10 +45,13 @@ $('[name="assetSelect"]').on('change', function () {
     $('#prop-name span').html(asset.name) // .html() is jQuery for innerHTML
     $('#prop-tilted span').html(asset.tilted.toString())
     $('#prop-spoiled span').html(asset.spoiled.toString())
+    $('#prop-sold span').html(asset.sold.toString())
+    $('#prop-location span').html(asset.catchLat.toString() + ' , ' + asset.catchLon.toString())
+    $('#prop-time span').html(asset.catchTime.toString())
     
     // fill temperature table
     $('#temperatureList').empty()
-    app.selectedAsset.temperatures.forEach(item => {
+    asset.temperatures.forEach(item => {
       addRow('#temperatureList', item.time, item.temp)
     })
   }
