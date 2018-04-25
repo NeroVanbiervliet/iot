@@ -80,9 +80,13 @@ const setTilted = (asset, signer, state) => {
       let processed = Buffer.from(entry, 'base64')
       processed = JSON.parse(processed)
 
+      // assign new values
+      processed.tilted = true
+      processed.spoiled = true
+
       // set tilted to true and return the new state
       return state.set({
-        [mainPropsAddress]: encode({name: processed.name, owner: processed.owner, tilted: true, spoiled: true, sold: processed.sold, catchLat: processed.catchLat, catchLon: processed.catchLon, catchTime: processed.catchTime}) 
+        [mainPropsAddress]: encode(processed) 
       })
     })
 }
@@ -107,9 +111,13 @@ const changeOwner = (asset, signer, state) => {
         throw new InvalidTransaction('Fish cannot be transfered because it is spoiled')
       }
 
+      // set new values
+      processed.owner = signer
+      processed.sold = true
+
       // set new owner to signer of transaction
       return state.set({
-        [mainPropsAddress]: encode({name: processed.name, owner: signer, tilted: processed.tilted, spoiled: processed.spoiled, sold:true, catchLat: processed.catchLat, catchLon: processed.catchLon, catchTime: processed.catchTime}) 
+        [mainPropsAddress]: encode(processed) 
       })
     })
 }
