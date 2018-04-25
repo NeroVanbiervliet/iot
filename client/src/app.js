@@ -54,6 +54,10 @@ $('[name="assetSelect"]').on('change', function () {
     asset.temperatures.forEach(item => {
       addRow('#temperatureList', item.time, item.temp)
     })
+    
+    // remove buy button if already sold
+    $('#transferSubmit').show()
+    if (asset.sold) $('#transferSubmit').hide()
   }
 })
 
