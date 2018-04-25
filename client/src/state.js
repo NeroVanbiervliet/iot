@@ -38,8 +38,24 @@ const makeKeyPair = () => {
 // fetch current state
 const getState = cb => {
   $.get(`${API_URL}/state?address=${PREFIX}`, ({ data }) => {
-    let processed = data.map(d => Buffer.from(d.data, 'base64'))
+    let filtered = data.filter(d => d.address.slice(-6).slice(0,2) == '00') // remove array addresses '01'
+    let addresses = filtered.map(d => d.address.slice(0,54)) // slice common part of address
+  
+    // process the main properties
+    let processed = filtered.map(d => Buffer.from(d.data, 'base64')) // extract data and decode
     processed = processed.map(d => JSON.parse(d))
+    for (let i=0; i<processed.length; i++) {
+      processed[i].temperatures = [] // initialise temperature list
+    }
+    
+    // process the array addresses
+    filtered = data.filter(d => d.address.slice(-6).slice(0,2) == '01')
+    filtered = data.filter(d => d.address.slice(-4) != '0000') // remove index indicators
+    for (let dataPoint of filtered) {
+      // get index of address
+      let ind = addresses.indexOf(dataPoint.address.slice(0,54))
+      processed[ind].temperatures.push(JSON.parse(Buffer.from(dataPoint.data, 'base64')))
+    }
     cb(processed, [])
   })
 }

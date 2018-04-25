@@ -15,18 +15,24 @@ const getAddress = (key, length = 64) => {
   return createHash('sha512').update(key).digest('hex').slice(0, length)
 }
 
-// gets the address of an index in the temperature array NEED brakke structuur van adressen
+// helper function to get the address of an asset in the fish namespace
+const getAssetAddress = name => PREFIX + getAddress(name, 58)
+
+// gets the address of an index in the temperature array
 const getArrayAddress = (assetName, arrayIndex) => {
-  let baseAddr = PREFIX + getAddress(assetName+'array', 60)
+  let baseAddr = getAssetAddress(assetName) + '01'
   return baseAddr + ("0000" + arrayIndex.toString(16)).slice(-4);
+}
+
+// gets the address of the main properties
+const getMainPropsAddress = (assetName) => {
+  return getAssetAddress(assetName) + '00' + '0000' // zeros split for clarity
 }
 
 // transaction family is defined by a name
 const FAMILY = 'fish'
 // address namespace is 3 bytes, created as first 6 hex characters of hash of family name
 const PREFIX = getAddress(FAMILY, 6)
-// helper function to get an address in the fish namespace
-const getAssetAddress = name => PREFIX + getAddress(name, 64)
 
 // helper functions to encode and decode binary data
 const encode = obj => Buffer.from(JSON.stringify(obj, Object.keys(obj).sort()))
@@ -35,12 +41,12 @@ const decode = buf => JSON.parse(buf.toString())
 // handler for action 'create'
 // add a new asset to the state
 const createAsset = (asset, owner, state) => { // owner == signer
-  const address = getAssetAddress(asset)
+  const mainPropsAddress = getMainPropsAddress(asset)
 
-  return state.get([address])
+  return state.get([mainPropsAddress])
     .then(entries => {
       // check if an asset already exists on the address
-      const entry = entries[address] // there is only one entry because only one address was queried
+      const entry = entries[mainPropsAddress] // there is only one entry because only one address was queried
       if (entry && entry.length > 0) {
         throw new InvalidTransaction('Asset name in use')
       }
@@ -50,7 +56,7 @@ const createAsset = (asset, owner, state) => { // owner == signer
 
       // new asset is added to the state
       return state.set({
-        [address]: encode({name: asset, owner, tilted: false, spoiled: false}), // syntax: {name: asset, owner} == {name: 'value of asset', owner: 'value of owner'}
+        [mainPropsAddress]: encode({name: asset, owner, tilted: false, spoiled: false}), // syntax: {name: asset, owner} == {name: 'value of asset', owner: 'value of owner'}
         [arrayAddr]: encode(1) // 1 is the first index to store a data point
       })
     })
@@ -60,12 +66,12 @@ const createAsset = (asset, owner, state) => { // owner == signer
 const setTilted = (asset, signer, state) => {
   // TODO check that signer is owner
   
-  const address = getAssetAddress(asset)
+  const mainPropsAddress = getMainPropsAddress(asset)
   
-  return state.get([address])
+  return state.get([mainPropsAddress])
     .then(entries => {
       // check if an asset exists on the address
-      const entry = entries[address] // there is only one entry because only one address was queried
+      const entry = entries[mainPropsAddress] // there is only one entry because only one address was queried
       if (!(entry && entry.length > 0)) {
         throw new InvalidTransaction('Asset not found')
       }
@@ -76,19 +82,19 @@ const setTilted = (asset, signer, state) => {
 
       // set tilted to true and return the new state
       return state.set({
-        [address]: encode({name: processed.name, owner: processed.owner, tilted: true, spoiled: true}) 
+        [mainPropsAddress]: encode({name: processed.name, owner: processed.owner, tilted: true, spoiled: true}) 
       })
     })
 }
 
 // handler for action 'transfer'
 const changeOwner = (asset, signer, state) => {
-  const address = getAssetAddress(asset)
+  const mainPropsAddress = getMainPropsAddress(asset)
   
-  return state.get([address])
+  return state.get([mainPropsAddress])
     .then(entries => {
       // check if an asset exists on the address
-      const entry = entries[address]
+      const entry = entries[mainPropsAddress]
       if (!(entry && entry.length > 0)) {
         throw new InvalidTransaction('Asset not found')
       }
@@ -103,20 +109,20 @@ const changeOwner = (asset, signer, state) => {
 
       // set new owner to signer of transaction
       return state.set({
-        [address]: encode({name: processed.name, owner: signer, tilted: processed.tilted, spoiled: processed.spoiled}) 
+        [mainPropsAddress]: encode({name: processed.name, owner: signer, tilted: processed.tilted, spoiled: processed.spoiled}) 
       })
     })
 }
 
 // handler for action 'add-temperature'
 const addTemperature = (asset, signer, state) => {
-  const address = getAssetAddress(asset.name)
+  const mainPropsAddress = getMainPropsAddress(asset.name)
   const arrayAddr = getArrayAddress(asset.name,0)
   
-  return state.get([address, arrayAddr])
+  return state.get([mainPropsAddress, arrayAddr])
     .then(entries => {
       // check if an asset exists on the address
-      const entry = entries[address]
+      const entry = entries[mainPropsAddress]
       if (!(entry && entry.length > 0)) {
         throw new InvalidTransaction('Asset not found')
       }

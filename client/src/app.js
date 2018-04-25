@@ -40,9 +40,17 @@ $('[name="assetSelect"]').on('change', function () {
   if (this.value !== 'none') {
     let asset = app.assets.find(key => key.name === this.value)
     app.selectedAsset = asset
+    
+    // populate properties
     $('#prop-name span').html(asset.name) // .html() is jQuery for innerHTML
     $('#prop-tilted span').html(asset.tilted.toString())
     $('#prop-spoiled span').html(asset.spoiled.toString())
+    
+    // fill temperature table
+    $('#temperatureList').empty()
+    app.selectedAsset.temperatures.forEach(item => {
+      addRow('#temperatureList', item.time, item.temp)
+    })
   }
 })
 
