@@ -12,6 +12,7 @@
 * verwijder alle `node_modules`
 * houd de `bundle.js` voor de frontend, maar verwijder de `src` en `node_modules`
 * checken op NEED
+* substitueer \*-student files of mappen waar nodig
 
 ## Obsolete
 

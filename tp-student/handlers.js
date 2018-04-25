@@ -18,12 +18,6 @@ const getAddress = (key, length = 64) => {
 // helper function to get the address of an asset in the fish namespace
 const getAssetAddress = name => PREFIX + getAddress(name, 58)
 
-// gets the address of an index in the temperature array
-const getArrayAddress = (assetName, arrayIndex) => {
-  let baseAddr = getAssetAddress(assetName) + '01'
-  return baseAddr + ("0000" + arrayIndex.toString(16)).slice(-4);
-}
-
 // gets the address of the main properties
 const getMainPropsAddress = (assetName) => {
   return getAssetAddress(assetName) + '00' + '0000' // zeros split for clarity
@@ -51,21 +45,15 @@ const createAsset = (asset, owner, state) => { // owner == signer
         throw new InvalidTransaction('Asset name in use')
       }
 
-      // create address for array 
-      const arrayAddr = getArrayAddress(asset,0) // 0th 'index' is the entry point of the array
-
       // new asset is added to the state
       return state.set({
-        [mainPropsAddress]: encode({name: asset, owner, tilted: false, spoiled: false, sold: false, catchLat:3.14, catchLon:3.14, catchTime:314}), // syntax: {name: asset, owner} == {name: 'value of asset', owner: 'value of owner'}
-        [arrayAddr]: encode(1) // 1 is the first index to store a data point
+        [mainPropsAddress]: encode({name: asset, owner, tilted: false, spoiled: false})
       })
     })
 }
 
 // handler for action 'add-tilted'
 const setTilted = (asset, signer, state) => {
-  // TODO check that signer is owner
-  
   const mainPropsAddress = getMainPropsAddress(asset)
   
   return state.get([mainPropsAddress])
@@ -85,63 +73,6 @@ const setTilted = (asset, signer, state) => {
       // set tilted to true and return the new state
       return state.set({
         [mainPropsAddress]: encode(processed) 
-      })
-    })
-}
-
-// handler for action 'transfer'
-const changeOwner = (asset, signer, state) => {
-  const mainPropsAddress = getMainPropsAddress(asset)
-  
-  return state.get([mainPropsAddress])
-    .then(entries => {
-      // check if an asset exists on the address
-      const entry = entries[mainPropsAddress]
-      if (!(entry && entry.length > 0)) {
-        throw new InvalidTransaction('Asset not found')
-      }
-
-      let processed = decode(entry)
-
-      // fish cannot be spoiled
-      if (processed.spoiled) {
-        throw new InvalidTransaction('Fish cannot be transfered because it is spoiled')
-      }
-
-      // set new values
-      processed.owner = signer
-      processed.sold = true
-
-      // set new owner to signer of transaction
-      return state.set({
-        [mainPropsAddress]: encode(processed) 
-      })
-    })
-}
-
-// handler for action 'add-temperature'
-const addTemperature = (asset, signer, state) => {
-  const mainPropsAddress = getMainPropsAddress(asset.name)
-  const arrayAddr = getArrayAddress(asset.name,0)
-  
-  return state.get([mainPropsAddress, arrayAddr])
-    .then(entries => {
-      // check if an asset exists on the address
-      const entry = entries[mainPropsAddress]
-      if (!(entry && entry.length > 0)) {
-        throw new InvalidTransaction('Asset not found')
-      }
-      
-      // check the next index of the temperature 
-      const nextIndex = decode(entries[arrayAddr])  
-      const nextAddr = getArrayAddress(asset.name,nextIndex)
-      
-      // TODO set spoiled if temperature too high
-
-      // change next array index and set new data point
-      return state.set({
-        [arrayAddr]: encode(nextIndex+1),
-        [nextAddr]: encode({temp: asset.temperature, time: asset.timestamp})        
       })
     })
 }
@@ -167,13 +98,11 @@ class JSONHandler extends TransactionHandler {
     // depending on the type, the correct handler is called
     if (action === 'create') return createAsset(asset, signer, state)
     if (action === 'add-tilted') return setTilted(asset, signer, state)
-    if (action === 'transfer') return changeOwner(asset, signer, state)
-    if (action === 'add-temperature') return addTemperature(asset, signer, state)
 
     // no handler function was found for the action
     return Promise.resolve().then(() => {
       throw new InvalidTransaction(
-        'Action must be "create, add-tilted, transfer or add-temperature"' // list to be expanded when more actions are created
+        'Action must be "create or add-tilted"' // list to be expanded when more actions are created
       )
     })
   }
