@@ -39,7 +39,7 @@ app.setTilted = function () {
 
 // initialise
 app.user = makeKeyPair()
-getState(app.assets).then(function (assets) {
+getState().then(function (assets) {
   app.assets = assets
   // new asset is created upon running the script
   app.createAsset()
